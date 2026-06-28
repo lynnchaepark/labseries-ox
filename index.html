@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +7,56 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app"></div>
+  <main class="app-shell">
+    <section class="card" id="joinScreen">
+      <div class="eyebrow">Lab Series Men's Skin Championship</div>
+      <h1>OX 예선전 입장</h1>
+      <label>조 선택</label>
+      <select id="teamSelect">
+        <option value="">조를 선택하세요</option>
+        <option value="1조">1조</option>
+        <option value="2조">2조</option>
+        <option value="3조">3조</option>
+        <option value="4조">4조</option>
+      </select>
+      <label>이름</label>
+      <input id="nameInput" placeholder="예) 홍길동" autocomplete="name" />
+      <button id="joinBtn">입장하기</button>
+      <p class="hint">진행자가 시작 버튼을 누르면 퀴즈가 시작됩니다.</p>
+    </section>
+
+    <section class="card hidden" id="waitingScreen">
+      <div class="loader"></div>
+      <h1>대기 중</h1>
+      <p id="playerInfo"></p>
+      <p class="hint">진행자가 시작하면 각자 1번 문제부터 시작합니다.</p>
+    </section>
+
+    <section class="card hidden quiz-card" id="quizScreen">
+      <div class="top-row">
+        <span id="questionCount">Q1 / 8</span>
+        <span id="timeText">15초</span>
+      </div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <h2 id="questionText"></h2>
+      <div class="ox-grid">
+        <button class="o-btn" data-answer="O">O</button>
+        <button class="x-btn" data-answer="X">X</button>
+      </div>
+      <p class="hint" id="answerStatus">정답을 선택하세요.</p>
+    </section>
+
+    <section class="card hidden" id="doneScreen">
+      <h1>제출 완료!</h1>
+      <p>수고하셨습니다.</p>
+      <p class="hint">결과 공개를 기다려주세요.</p>
+    </section>
+
+    <section class="card hidden" id="resultScreen">
+      <h1>왕중왕전 진출자</h1>
+      <div id="resultList" class="result-list"></div>
+    </section>
+  </main>
   <script type="module" src="app.js"></script>
 </body>
 </html>

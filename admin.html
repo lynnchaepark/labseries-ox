@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Lab Series OX</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="admin-header">
+      <div>
+        <div class="eyebrow">Admin Console</div>
+        <h1>Lab Series OX 예선전</h1>
+      </div>
+      <div class="admin-actions">
+        <button id="resetBtn" class="secondary">초기화</button>
+        <button id="startBtn">START</button>
+        <button id="showResultBtn" class="gold">결과 공개</button>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <h2>진행 상태</h2>
+        <p id="gameStatus">로딩 중...</p>
+        <p class="hint">참가자는 START 이후 각자 1번부터 8번까지 진행합니다.</p>
+      </div>
+      <div class="panel">
+        <h2>완료 현황</h2>
+        <p id="completionStatus">0 / 0 완료</p>
+        <div id="teamCounts" class="team-counts"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>참가자 명단</h2>
+      <div id="playersTable" class="players-table"></div>
+    </section>
+
+    <section class="panel">
+      <h2>왕중왕전 진출자</h2>
+      <div id="adminResults" class="result-list"></div>
+    </section>
+  </main>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

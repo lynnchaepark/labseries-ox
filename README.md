@@ -1,10 +1,12 @@
-# Lab Series OX Quiz
+# Lab Series OX V2
 
-참가자: https://labseries-ox.vercel.app
-진행자: https://labseries-ox.vercel.app?mode=admin
+## URL
+- 참가자: https://labseries-ox.vercel.app
+- 진행자: https://labseries-ox.vercel.app/admin.html
 
-## 사용법
-1. 참가자는 이름과 조를 선택하고 입장합니다.
-2. 진행자는 admin 화면에서 START를 누릅니다.
-3. 문제는 15초씩 자동 진행됩니다.
-4. 종료 후 조별 최고 득점자가 왕중왕전 진출자로 표시됩니다.
+## 운영
+1. 참가자가 이름과 조를 선택해 입장합니다.
+2. 진행자가 admin.html에서 START를 누릅니다.
+3. 참가자는 각자 Q1부터 8문제를 15초씩 풉니다.
+4. 참가자는 완료 후 결과 대기 화면에 머뭅니다.
+5. 진행자가 완료 인원을 확인한 뒤 결과 공개를 누르면 참가자와 진행자 화면에 조별 최고 득점자가 표시됩니다.
