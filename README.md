@@ -1,12 +1,16 @@
-# Lab Series OX Quiz
+# Lab Series OX Championship V1
 
-## 사용 순서
-1. Firebase Realtime Database 프로젝트 생성
-2. app.js 상단의 firebaseConfig 교체
-3. GitHub에 업로드
-4. Vercel로 배포
-5. 관리자 화면: `배포주소?s=main#/admin`
-6. 참가자 화면: 관리자 화면에 표시되는 참가자 URL을 QR로 생성
+## 화면 주소
+- 참가자: `/`
+- 진행자: `/?mode=admin`
+
+## 필요 설정
+이 버전은 진행자 시작 버튼, 동시 시작, 참가자 답변 저장, 조별 최고 득점자 표시를 위해 Firebase Realtime Database를 사용합니다.
+
+`app.js` 상단의 `firebaseConfig`를 본인 Firebase 프로젝트 값으로 교체해야 동작합니다.
 
 ## 문제 수정
-`app.js`의 `QUESTIONS` 배열을 수정하세요.
+`app.js`의 `QUESTIONS` 배열에서 문제와 정답을 수정하면 됩니다.
+
+## 시간 수정
+`app.js`의 `DURATION = 15` 값을 바꾸면 문제당 제한시간이 변경됩니다.
