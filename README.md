@@ -1,14 +1,10 @@
-# Lab Series OX Championship
+# Lab Series OX Quiz
 
-## 접속 주소
-- 참가자: Vercel 기본 주소
-- 진행자: Vercel 기본 주소 뒤에 `?mode=admin`
+참가자: https://labseries-ox.vercel.app
+진행자: https://labseries-ox.vercel.app?mode=admin
 
-## 사용 방법
-1. 참가자가 조와 이름을 입력하고 입장합니다.
-2. 진행자가 `START`를 누르면 모든 참가자가 동시에 시작합니다.
-3. 문제당 15초씩 자동 진행됩니다.
-4. 종료 후 진행자 화면에서 조별 최고 득점자를 확인합니다.
-
-## 문제 수정
-`app.js` 파일의 `questions` 배열을 수정하면 됩니다.
+## 사용법
+1. 참가자는 이름과 조를 선택하고 입장합니다.
+2. 진행자는 admin 화면에서 START를 누릅니다.
+3. 문제는 15초씩 자동 진행됩니다.
+4. 종료 후 조별 최고 득점자가 왕중왕전 진출자로 표시됩니다.
