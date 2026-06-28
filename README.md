@@ -1,16 +1,14 @@
-# Lab Series OX Championship V1
+# Lab Series OX Championship
 
-## 화면 주소
-- 참가자: `/`
-- 진행자: `/?mode=admin`
+## 접속 주소
+- 참가자: Vercel 기본 주소
+- 진행자: Vercel 기본 주소 뒤에 `?mode=admin`
 
-## 필요 설정
-이 버전은 진행자 시작 버튼, 동시 시작, 참가자 답변 저장, 조별 최고 득점자 표시를 위해 Firebase Realtime Database를 사용합니다.
-
-`app.js` 상단의 `firebaseConfig`를 본인 Firebase 프로젝트 값으로 교체해야 동작합니다.
+## 사용 방법
+1. 참가자가 조와 이름을 입력하고 입장합니다.
+2. 진행자가 `START`를 누르면 모든 참가자가 동시에 시작합니다.
+3. 문제당 15초씩 자동 진행됩니다.
+4. 종료 후 진행자 화면에서 조별 최고 득점자를 확인합니다.
 
 ## 문제 수정
-`app.js`의 `QUESTIONS` 배열에서 문제와 정답을 수정하면 됩니다.
-
-## 시간 수정
-`app.js`의 `DURATION = 15` 값을 바꾸면 문제당 제한시간이 변경됩니다.
+`app.js` 파일의 `questions` 배열을 수정하면 됩니다.

@@ -1,274 +1,378 @@
-// ===============================
-// Lab Series OX Championship V1
-// Firebase Realtime Database 필요
-// 1) firebaseConfig 부분만 본인 프로젝트 값으로 교체
-// 2) GitHub에 업로드하면 Vercel 자동 배포
-// ===============================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot, collection,
+  getDocs, deleteDoc, updateDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, update, onValue, get, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-// TODO: Firebase 콘솔에서 복사한 config로 교체하세요.
 const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://PASTE_YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "PASTE_YOUR_PROJECT",
-  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyAYG9bQoDqxvWWX3mteFJo_4Oxp029SIm8",
+  authDomain: "labseries-ox.firebaseapp.com",
+  projectId: "labseries-ox",
+  storageBucket: "labseries-ox.firebasestorage.app",
+  messagingSenderId: "889787435877",
+  appId: "1:889787435877:web:be840874b87a226225af8c"
 };
 
-const QUESTIONS = [
-  { text: "남성의 피부결은\n여성보다 더 거친 편이다.", answer: "O" },
-  { text: "남성 피부는 여성 피부와\n동일한 제품과 케어를\n사용하는 것이 가장 효과적이다.", answer: "X" },
-  { text: "남성은 여성보다\n피지샘이 크고 피지 분비량이 많아,\n모공이 더 넓어 보이는 경향이 있다.", answer: "O" },
-  { text: "남성 피부는 여성보다\n수분 함유량이 높다.", answer: "X" },
-  { text: "남성 피부는 호르몬의 영향으로\n여성보다 지방 함량이 많아\n피부가 더 두껍다.", answer: "X" },
-  { text: "남성과 여성의 피부는\n기본 구조부터 다르기 때문에,\n각각에 맞는 제품과 케어가 필요하다.", answer: "X" },
-  { text: "남성 피부는 두껍기 때문에\n주름이 거의 생기지 않는다.", answer: "X" },
-  { text: "남성의 피부는\n빛을 다양한 방향으로 반사하여\n피부가 더욱 칙칙해 보입니다.", answer: "O" }
-];
-const DURATION = 15;
-const TEAMS = ["1조", "2조", "3조", "4조"];
-const GAME_ID = "main";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-let app, db;
-try {
-  app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-} catch (e) {
-  console.error(e);
-}
+const GAME_ID = "main";
+const QUESTION_SECONDS = 15;
+
+const questions = [
+  {
+    text: "남성의 피부결은\n여성보다 더 거친 편이다.",
+    answer: "O"
+  },
+  {
+    text: "남성 피부는 여성 피부와\n동일한 제품과 케어를\n사용하는 것이 가장 효과적이다.",
+    answer: "X"
+  },
+  {
+    text: "남성은 여성보다\n피지샘이 크고 피지 분비량이 많아,\n모공이 더 넓어 보이는 경향이 있다.",
+    answer: "O"
+  },
+  {
+    text: "남성 피부는 여성보다\n수분 함유량이 높다.",
+    answer: "X"
+  },
+  {
+    text: "남성 피부는 호르몬의 영향으로\n여성보다 지방 함량이 많아\n피부가 더 두껍다.",
+    answer: "X"
+  },
+  {
+    text: "남성과 여성의 피부는\n기본 구조부터 다르기 때문에,\n각각에 맞는 제품과 케어가 필요하다.",
+    answer: "X"
+  },
+  {
+    text: "남성 피부는 두껍기 때문에\n주름이 거의 생기지 않는다.",
+    answer: "X"
+  },
+  {
+    text: "남성의 피부는\n빛을 다양한 방향으로 반사하여\n피부가 더욱 칙칙해 보입니다.",
+    answer: "O"
+  }
+];
 
 const $app = document.getElementById("app");
-const qs = new URLSearchParams(location.search);
-const mode = qs.get("mode") || "player";
-const pidKey = "labseries_pid";
-const nameKey = "labseries_name";
-const teamKey = "labseries_team";
+const stateRef = doc(db, "games", GAME_ID);
+const playersCol = collection(db, "games", GAME_ID, "players");
+const answersCol = collection(db, "games", GAME_ID, "answers");
+let localTimer = null;
+let cachedPlayers = [];
+let cachedAnswers = [];
 
-function gameRef(path="") { return ref(db, `games/${GAME_ID}${path ? "/"+path : ""}`); }
-function uid(){ return "p_" + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
-function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
-function render(html){ $app.innerHTML = html; }
-function firebaseMissing(){ return firebaseConfig.apiKey.includes("PASTE_"); }
+const params = new URLSearchParams(location.search);
+const isAdmin = params.get("mode") === "admin";
 
-if (mode === "admin") renderAdmin();
-else renderPlayer();
-
-function shell(inner){
-  return `<div class="wrap"><div class="card">${inner}</div><div class="footer center">Lab Series Men's Skin Championship</div></div>`;
+function uid() {
+  const existing = localStorage.getItem("labseriesPlayerId");
+  if (existing) return existing;
+  const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+  localStorage.setItem("labseriesPlayerId", id);
+  return id;
 }
 
-function renderPlayer(){
-  if (firebaseMissing()) {
-    render(shell(`<h1 class="title">Firebase 설정이 필요합니다</h1><p>app.js의 firebaseConfig를 먼저 입력해야 실시간 퀴즈가 동작합니다.</p>`));
-    return;
+function html(strings, ...vals) {
+  return strings.map((s, i) => s + (vals[i] ?? "")).join("");
+}
+
+async function ensureGame() {
+  const snap = await getDoc(stateRef);
+  if (!snap.exists()) {
+    await setDoc(stateRef, {
+      status: "waiting",
+      currentQuestion: 0,
+      questionStartedAt: null,
+      questionSeconds: QUESTION_SECONDS,
+      updatedAt: serverTimestamp()
+    });
   }
-  let pid = localStorage.getItem(pidKey);
-  const savedName = localStorage.getItem(nameKey) || "";
-  const savedTeam = localStorage.getItem(teamKey) || "1조";
-  if (!pid) { pid = uid(); localStorage.setItem(pidKey, pid); }
-
-  renderJoin(savedName, savedTeam, pid);
 }
 
-function renderJoin(savedName, savedTeam, pid){
-  render(shell(`
-    <div class="pill">OX 예선전</div>
-    <h1 class="title">Lab Series<br/>Men's Skin Championship</h1>
-    <p class="sub">이름과 조를 입력하고 대기해주세요. 진행자가 시작하면 모든 참가자가 동시에 시작합니다.</p>
-    <div class="row">
-      <div class="field"><label>조 선택</label><select id="team">${TEAMS.map(t=>`<option ${t===savedTeam?"selected":""}>${t}</option>`).join("")}</select></div>
-      <div class="field"><label>이름</label><input id="name" value="${esc(savedName)}" placeholder="예) 홍길동" /></div>
-      <button class="btn btn-primary" id="joinBtn">입장하기</button>
-    </div>
-  `));
+function scorePlayer(playerId) {
+  return cachedAnswers
+    .filter(a => a.playerId === playerId && questions[a.questionIndex]?.answer === a.choice)
+    .length;
+}
+
+function renderParticipant() {
+  const playerId = uid();
+  const savedName = localStorage.getItem("labseriesName") || "";
+  const savedTeam = localStorage.getItem("labseriesTeam") || "1조";
+  $app.innerHTML = html`
+    <main class="container">
+      <section class="card">
+        <div class="header">
+          <div class="logo">Lab Series OX Championship</div>
+          <div class="badge">예선전</div>
+        </div>
+        <h1 class="title">입장하기</h1>
+        <p class="subtitle">조를 선택하고 이름을 입력해주세요. 진행자가 시작하면 모든 참가자가 동시에 퀴즈를 시작합니다.</p>
+        <div class="field">
+          <label class="label">조 선택</label>
+          <select id="team">
+            ${["1조","2조","3조","4조"].map(t => `<option ${savedTeam===t?"selected":""}>${t}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">이름</label>
+          <input id="name" placeholder="예) 홍길동" value="${savedName}" />
+        </div>
+        <button class="primary" id="joinBtn">입장하기</button>
+        <div class="notice small">진행자 화면: 주소 뒤에 <b>?mode=admin</b> 을 붙이면 됩니다.</div>
+      </section>
+    </main>`;
   document.getElementById("joinBtn").onclick = async () => {
     const name = document.getElementById("name").value.trim();
     const team = document.getElementById("team").value;
     if (!name) return alert("이름을 입력해주세요.");
-    localStorage.setItem(nameKey, name);
-    localStorage.setItem(teamKey, team);
-    await set(gameRef(`players/${pid}`), { name, team, score:0, joinedAt: Date.now() });
-    renderWaiting(pid, name, team);
+    localStorage.setItem("labseriesName", name);
+    localStorage.setItem("labseriesTeam", team);
+    await setDoc(doc(playersCol, playerId), { id: playerId, name, team, joinedAt: serverTimestamp() }, { merge: true });
+    participantLobby(playerId);
   };
 }
 
-function renderWaiting(pid, name, team){
-  render(shell(`
-    <div class="pill">입장 완료</div>
-    <h1 class="title">${esc(team)} ${esc(name)}님</h1>
-    <p class="sub">진행자가 시작 버튼을 누르면 퀴즈가 자동으로 시작됩니다.</p>
-    <div class="notice">화면을 닫지 말고 기다려주세요.</div>
-  `));
-  onValue(gameRef("state"), snap => {
-    const state = snap.val();
-    if (state?.status === "running") renderQuestion(pid);
-    if (state?.status === "finished") renderPlayerResult(pid);
-  });
-}
-
-let qUnsubStarted = false;
-function renderQuestion(pid){
-  if(qUnsubStarted) return;
-  qUnsubStarted = true;
-  onValue(gameRef("state"), async snap => {
-    const state = snap.val();
+function participantLobby(playerId) {
+  $app.innerHTML = html`
+    <main class="container">
+      <section class="card center">
+        <div class="logo">Lab Series OX Championship</div>
+        <div class="spinner"></div>
+        <div class="waiting">진행자를 기다리는 중...</div>
+        <p class="muted">시작 버튼이 눌리면 자동으로 문제가 시작됩니다.</p>
+      </section>
+    </main>`;
+  onSnapshot(stateRef, (snap) => {
+    const state = snap.data();
     if (!state) return;
-    if (state.status === "finished") return renderPlayerResult(pid);
-    const idx = state.currentQuestion ?? 0;
-    const q = QUESTIONS[idx];
-    if (!q) return;
-    const endAt = state.questionEndAt || (Date.now()+DURATION*1000);
-    let answered = false;
-    const ansSnap = await get(gameRef(`answers/${idx}/${pid}`));
-    answered = ansSnap.exists();
-    render(shell(`
-      <div class="topbar"><div class="pill">Q${idx+1} / ${QUESTIONS.length}</div><div class="timeText"><span id="left">15</span>초</div></div>
-      <div class="timerWrap"><div class="timerBar" id="bar"></div></div>
-      <div class="question">${esc(q.text)}</div>
-      <div class="big-actions">
-        <button class="btn ox o" id="btnO" ${answered?"disabled":""}>O</button>
-        <button class="btn ox x" id="btnX" ${answered?"disabled":""}>X</button>
-      </div>
-      <p class="center muted" id="status">${answered ? "답변이 제출되었습니다." : "정답이라고 생각하는 버튼을 눌러주세요."}</p>
-    `));
-    const submit = async (answer) => {
-      if (answered) return;
-      answered = true;
-      const correct = answer === q.answer;
-      await set(gameRef(`answers/${idx}/${pid}`), { answer, correct, answeredAt: Date.now() });
-      if (correct) {
-        const playerSnap = await get(gameRef(`players/${pid}`));
-        const player = playerSnap.val() || {};
-        await update(gameRef(`players/${pid}`), { score: (player.score || 0) + 1 });
-      }
-      document.getElementById("btnO").disabled = true;
-      document.getElementById("btnX").disabled = true;
-      document.getElementById("status").textContent = "답변이 제출되었습니다.";
-    };
-    document.getElementById("btnO").onclick = () => submit("O");
-    document.getElementById("btnX").onclick = () => submit("X");
-    startTimer(endAt);
+    if (state.status === "running") showQuestion(playerId, state);
+    if (state.status === "finished") showParticipantDone();
+    if (state.status === "waiting") {
+      // keep lobby
+    }
   });
 }
 
-function startTimer(endAt){
-  const leftEl = document.getElementById("left");
+async function getMyAnswer(playerId, qIndex) {
+  const snap = await getDoc(doc(answersCol, `${playerId}_${qIndex}`));
+  return snap.exists() ? snap.data().choice : null;
+}
+
+async function showQuestion(playerId, state) {
+  const qIndex = state.currentQuestion;
+  if (qIndex >= questions.length) return showParticipantDone();
+  const q = questions[qIndex];
+  const existing = await getMyAnswer(playerId, qIndex);
+  const started = state.questionStartedAt || Date.now();
+  const seconds = state.questionSeconds || QUESTION_SECONDS;
+  $app.innerHTML = html`
+    <main class="container">
+      <section class="card">
+        <div class="questionMeta">
+          <div>Q${qIndex + 1} / ${questions.length}</div>
+          <div class="timerText"><span id="remain">${seconds}</span>초</div>
+        </div>
+        <div class="barOuter"><div class="barInner" id="bar"></div></div>
+        <div class="question">${q.text}</div>
+        <div class="oxGrid">
+          <button class="oxBtn o ${existing === "O" ? "selected" : ""}" data-choice="O">O</button>
+          <button class="oxBtn x ${existing === "X" ? "selected" : ""}" data-choice="X">X</button>
+        </div>
+        <p class="center muted">선택하면 자동 저장됩니다.</p>
+      </section>
+    </main>`;
+  document.querySelectorAll(".oxBtn").forEach(btn => {
+    btn.onclick = async () => {
+      const choice = btn.dataset.choice;
+      document.querySelectorAll(".oxBtn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      await setDoc(doc(answersCol, `${playerId}_${qIndex}`), {
+        playerId, questionIndex: qIndex, choice, answeredAt: serverTimestamp()
+      });
+    };
+  });
+  startCountdown(started, seconds);
+}
+
+function showParticipantDone() {
+  if (localTimer) clearInterval(localTimer);
+  $app.innerHTML = html`
+    <main class="container">
+      <section class="card center">
+        <div class="logo">Lab Series OX Championship</div>
+        <h1 class="title">OX 예선 종료!</h1>
+        <p class="subtitle">결과는 진행자 화면에서 확인해주세요.</p>
+      </section>
+    </main>`;
+}
+
+function startCountdown(started, seconds) {
+  if (localTimer) clearInterval(localTimer);
+  const remainEl = document.getElementById("remain");
   const bar = document.getElementById("bar");
-  const tick = () => {
-    const leftMs = Math.max(0, endAt - Date.now());
-    const leftSec = Math.ceil(leftMs/1000);
-    if(leftEl) leftEl.textContent = leftSec;
-    if(bar) bar.style.width = `${Math.max(0, Math.min(100, leftMs/(DURATION*1000)*100))}%`;
-    if(leftMs > 0) requestAnimationFrame(tick);
-  };
-  tick();
+  localTimer = setInterval(() => {
+    const elapsed = (Date.now() - started) / 1000;
+    const remain = Math.max(0, seconds - elapsed);
+    if (remainEl) remainEl.textContent = Math.ceil(remain);
+    if (bar) bar.style.width = `${Math.max(0, (remain / seconds) * 100)}%`;
+    if (remain <= 0) clearInterval(localTimer);
+  }, 200);
 }
 
-async function renderPlayerResult(pid){
-  const pSnap = await get(gameRef(`players/${pid}`));
-  const p = pSnap.val();
-  render(shell(`
-    <div class="pill">결과</div>
-    <h1 class="title">수고하셨습니다!</h1>
-    <p class="sub">${esc(p?.team || "")} ${esc(p?.name || "")}님의 점수</p>
-    <div class="center score">${p?.score || 0} / ${QUESTIONS.length}</div>
-  `));
+async function renderAdmin() {
+  await ensureGame();
+  $app.innerHTML = html`
+    <main class="container">
+      <div class="header">
+        <div class="logo">Lab Series OX Championship</div>
+        <div class="badge">진행자</div>
+      </div>
+      <div class="adminGrid">
+        <section class="card">
+          <h1 class="title">진행자 화면</h1>
+          <div id="adminState"></div>
+          <div class="nav">
+            <button class="secondary" id="startBtn">START</button>
+            <button class="secondary" id="nextBtn">다음 문제</button>
+            <button class="secondary" id="finishBtn">종료/결과</button>
+            <button class="secondary danger" id="resetBtn">전체 초기화</button>
+          </div>
+          <div id="questionPreview"></div>
+        </section>
+        <section class="card">
+          <h2>참가자 현황</h2>
+          <div id="playersBox"></div>
+        </section>
+      </div>
+      <section class="card" style="margin-top:18px">
+        <h2>결과 / 조별 최고 득점자</h2>
+        <div id="resultsBox"></div>
+      </section>
+    </main>`;
+
+  document.getElementById("startBtn").onclick = () => startGame();
+  document.getElementById("nextBtn").onclick = () => nextQuestion();
+  document.getElementById("finishBtn").onclick = () => finishGame();
+  document.getElementById("resetBtn").onclick = () => resetGame();
+
+  onSnapshot(playersCol, (snap) => {
+    cachedPlayers = snap.docs.map(d => d.data());
+    updateAdminBoxes();
+  });
+  onSnapshot(answersCol, (snap) => {
+    cachedAnswers = snap.docs.map(d => d.data());
+    updateAdminBoxes();
+  });
+  onSnapshot(stateRef, (snap) => {
+    const state = snap.data();
+    updateAdminState(state);
+    updateAdminBoxes();
+    if (state?.status === "running") adminAutoAdvance(state);
+  });
 }
 
-function renderAdmin(){
-  if (firebaseMissing()) {
-    render(shell(`<h1 class="title">Firebase 설정이 필요합니다</h1><p>app.js의 firebaseConfig를 먼저 입력해야 관리자 화면이 동작합니다.</p>`));
-    return;
-  }
-  render(shell(`
-    <div class="pill">진행자 화면</div>
-    <h1 class="title">OX 예선전 관리자</h1>
-    <p class="sub">참가자 입장 확인 후 시작을 누르면 모든 참가자가 동시에 시작합니다.</p>
-    <div class="tabs"><span class="tab active">관리자 주소</span><span class="tab">?mode=admin</span></div>
-    <div class="row">
-      <button class="btn btn-primary" id="startBtn">퀴즈 시작</button>
-      <button class="btn btn-ghost" id="resetBtn">전체 초기화</button>
-    </div>
-    <div id="adminBody" style="margin-top:18px"></div>
-  `));
-  document.getElementById("startBtn").onclick = startGame;
-  document.getElementById("resetBtn").onclick = async () => { if(confirm("참가자/점수/응답을 모두 초기화할까요?")) await resetGame(); };
-  listenAdmin();
+let adminAdvanceTimer = null;
+function adminAutoAdvance(state) {
+  if (adminAdvanceTimer) clearTimeout(adminAdvanceTimer);
+  const started = state.questionStartedAt || Date.now();
+  const seconds = state.questionSeconds || QUESTION_SECONDS;
+  const msLeft = Math.max(0, seconds * 1000 - (Date.now() - started));
+  adminAdvanceTimer = setTimeout(async () => {
+    const latest = (await getDoc(stateRef)).data();
+    if (!latest || latest.status !== "running") return;
+    if (latest.currentQuestion !== state.currentQuestion) return;
+    if (latest.currentQuestion >= questions.length - 1) await finishGame();
+    else await nextQuestion();
+  }, msLeft + 450);
 }
 
-async function resetGame(){
-  await remove(gameRef());
-  await set(gameRef("state"), { status:"waiting", currentQuestion:0, updatedAt: serverTimestamp() });
+async function startGame() {
+  await setDoc(stateRef, {
+    status: "running",
+    currentQuestion: 0,
+    questionStartedAt: Date.now(),
+    questionSeconds: QUESTION_SECONDS,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
 }
 
-async function startGame(){
-  await set(gameRef("state"), {
-    status:"running",
-    currentQuestion:0,
-    questionStartAt: Date.now(),
-    questionEndAt: Date.now() + DURATION*1000,
+async function nextQuestion() {
+  const snap = await getDoc(stateRef);
+  const state = snap.data() || {};
+  const next = Math.min((state.currentQuestion ?? 0) + 1, questions.length);
+  if (next >= questions.length) return finishGame();
+  await setDoc(stateRef, {
+    status: "running",
+    currentQuestion: next,
+    questionStartedAt: Date.now(),
+    questionSeconds: QUESTION_SECONDS,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+async function finishGame() {
+  await setDoc(stateRef, { status: "finished", updatedAt: serverTimestamp() }, { merge: true });
+}
+
+async function resetGame() {
+  if (!confirm("참가자와 답변을 모두 삭제하고 처음부터 시작할까요?")) return;
+  const ps = await getDocs(playersCol);
+  const as = await getDocs(answersCol);
+  await Promise.all([...ps.docs.map(d => deleteDoc(d.ref)), ...as.docs.map(d => deleteDoc(d.ref))]);
+  await setDoc(stateRef, {
+    status: "waiting",
+    currentQuestion: 0,
+    questionStartedAt: null,
+    questionSeconds: QUESTION_SECONDS,
     updatedAt: serverTimestamp()
   });
-  scheduleNext(0);
 }
 
-function scheduleNext(idx){
-  setTimeout(async () => {
-    const next = idx + 1;
-    if(next >= QUESTIONS.length){
-      await update(gameRef("state"), { status:"finished", finishedAt: Date.now() });
-      return;
-    }
-    await update(gameRef("state"), {
-      currentQuestion: next,
-      questionStartAt: Date.now(),
-      questionEndAt: Date.now() + DURATION*1000,
-      updatedAt: serverTimestamp()
-    });
-    scheduleNext(next);
-  }, DURATION*1000 + 900);
+function updateAdminState(state) {
+  if (!document.getElementById("adminState")) return;
+  const statusLabel = state?.status === "running" ? "진행 중" : state?.status === "finished" ? "종료" : "대기 중";
+  document.getElementById("adminState").innerHTML = html`
+    <div class="notice">
+      현재 상태: <b>${statusLabel}</b><br/>
+      현재 문제: <b>${(state?.currentQuestion ?? 0) + 1}</b> / ${questions.length}
+    </div>`;
+  const qi = state?.currentQuestion ?? 0;
+  const q = questions[qi];
+  document.getElementById("questionPreview").innerHTML = q ? html`
+    <div class="questionBox">
+      <div class="adminQuestion">Q${qi + 1}. ${q.text}</div>
+      <span class="answerBadge">정답: ${q.answer}</span>
+    </div>` : "";
 }
 
-function listenAdmin(){
-  onValue(gameRef(), snap => {
-    const data = snap.val() || {};
-    const players = Object.entries(data.players || {}).map(([id,p]) => ({id,...p}));
-    const state = data.state || {status:"waiting", currentQuestion:0};
-    const answers = data.answers || {};
-    const idx = state.currentQuestion ?? 0;
-    const currentAnswers = answers[idx] || {};
-    const byTeam = TEAMS.map(team => {
-      const members = players.filter(p=>p.team===team);
-      return { team, total: members.length, answered: members.filter(p=>currentAnswers[p.id]).length };
-    });
-    const leaders = getLeaders(players);
-    const ranking = [...players].sort((a,b)=>(b.score||0)-(a.score||0) || String(a.name).localeCompare(String(b.name),'ko'));
-    document.getElementById("adminBody").innerHTML = `
-      <div class="adminGrid">
-        <div class="stat"><h3>현재 상태</h3><p><b>${state.status === "running" ? `진행 중 Q${idx+1}/${QUESTIONS.length}` : state.status === "finished" ? "종료" : "대기 중"}</b></p><p class="small muted">참가자 ${players.length}명</p></div>
-        <div class="stat"><h3>현재 응답</h3>${byTeam.map(t=>`<p><b>${t.team}</b> ${t.answered}/${t.total}</p>`).join("")}</div>
-      </div>
-      <div class="adminGrid" style="margin-top:16px">
-        <div class="stat"><h3>개인 순위</h3><div class="list">${ranking.map((p,i)=>`<div class="person"><span>${i+1}. ${esc(p.team)} ${esc(p.name)}</span><b>${p.score||0}점</b></div>`).join("") || "아직 참가자가 없습니다."}</div></div>
-        <div class="stat"><h3>조별 최고 득점자</h3><div class="list">${TEAMS.map(t=>{
-          const l = leaders[t];
-          return `<div class="person leader"><span>${t}</span><b>${l ? `${esc(l.name)} ${l.score||0}점` : "-"}</b></div>`;
-        }).join("")}</div></div>
-      </div>
-      ${state.status === "finished" ? `<div class="notice"><b>퀴즈 종료!</b> 조별 최고 득점자가 왕중왕전 대표입니다.</div>` : ""}
-    `;
-  });
+function updateAdminBoxes() {
+  const playersBox = document.getElementById("playersBox");
+  const resultsBox = document.getElementById("resultsBox");
+  if (!playersBox || !resultsBox) return;
+  const teams = ["1조","2조","3조","4조"];
+  playersBox.innerHTML = `<div class="teamGrid">${teams.map(team => {
+    const members = cachedPlayers.filter(p => p.team === team);
+    return `<div class="teamCard"><h3>${team} (${members.length}명)</h3>${members.map(p => `<div class="player"><span>${p.name}</span><b>${scorePlayer(p.id)}점</b></div>`).join("") || `<div class="small muted">대기 중</div>`}</div>`;
+  }).join("")}</div>`;
+
+  resultsBox.innerHTML = `<div class="results">${teams.map(team => {
+    const members = cachedPlayers.filter(p => p.team === team).map(p => ({...p, score: scorePlayer(p.id)}));
+    if (!members.length) return `<div class="winner"><h3>${team}</h3><div class="muted">참가자 없음</div></div>`;
+    const max = Math.max(...members.map(m => m.score));
+    const winners = members.filter(m => m.score === max);
+    const sorted = members.sort((a,b) => b.score - a.score || a.name.localeCompare(b.name));
+    return `<div class="winner"><h3>${team} 대표 후보</h3>
+      ${winners.map(w => `<div class="rankline"><b>🥇 ${w.name}</b><b>${w.score}점</b></div>`).join("")}
+      <div class="small muted" style="margin-top:10px">전체 순위</div>
+      ${sorted.map(m => `<div class="rankline"><span>${m.name}</span><span>${m.score}점</span></div>`).join("")}
+    </div>`;
+  }).join("")}</div>`;
 }
 
-function getLeaders(players){
-  const leaders = {};
-  TEAMS.forEach(team => {
-    const members = players.filter(p=>p.team===team).sort((a,b)=>(b.score||0)-(a.score||0) || String(a.name).localeCompare(String(b.name),'ko'));
-    leaders[team] = members[0] || null;
-  });
-  return leaders;
-}
+(async function init(){
+  await ensureGame();
+  if (isAdmin) renderAdmin();
+  else renderParticipant();
+})();
