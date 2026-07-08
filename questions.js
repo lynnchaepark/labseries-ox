@@ -28,9 +28,9 @@ export const QUESTIONS = [
     type: "blanks",
     text: "호르몬 차이에 의해 남성은 여성보다 약 (   )~(   )% 더 많은 땀을 흘립니다.\n\n또한 반복적인 면도로 피부 장벽이 손상되어 수분이 유실되며, 여성보다 수분 함유량이 (   )배 적습니다.",
     fields: [
-      { key: "sweatMin", label: "첫 번째 빈칸", placeholder: "예: 30" },
-      { key: "sweatMax", label: "두 번째 빈칸", placeholder: "예: 40" },
-      { key: "water", label: "세 번째 빈칸", placeholder: "예: 3" }
+      { key: "sweatMin", label: "첫 번째 빈칸", placeholder: "숫자만 입력해주세요" },
+      { key: "sweatMax", label: "두 번째 빈칸", placeholder: "숫자만 입력해주세요" },
+      { key: "water", label: "세 번째 빈칸", placeholder: "숫자만 입력해주세요" }
     ],
     points: 1
   },
