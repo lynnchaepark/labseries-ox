@@ -1,48 +1,36 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin | Lab Series OX</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <main class="admin-shell">
-    <section class="admin-header">
-      <div>
-        <div class="eyebrow">Admin Console</div>
-        <h1>Lab Series OX 예선전</h1>
-      </div>
-      <div class="admin-actions">
-        <button id="resetBtn" class="secondary">초기화</button>
-        <button id="startBtn">START</button>
-        <button id="showResultBtn" class="gold">결과 공개</button>
-      </div>
-    </section>
+  <main class="wrap adminWrap">
+    <section class="card wide">
+      <p class="eyebrow">ADMIN</p>
+      <h1>Lab Series OX Championship</h1>
+      <p class="sub">팀별 대표가 입장했는지 확인 후 시작해주세요.</p>
 
-    <section class="grid-2">
-      <div class="panel">
-        <h2>진행 상태</h2>
-        <p id="gameStatus">로딩 중...</p>
-        <p class="hint">참가자는 START 이후 각자 1번부터 8번까지 진행합니다.</p>
+      <div class="adminBtns">
+        <button id="resetBtn" class="btn danger">초기화</button>
+        <button id="startBtn" class="btn primary">START</button>
+        <button id="revealBtn" class="btn gold">결과 공개</button>
       </div>
-      <div class="panel">
-        <h2>완료 현황</h2>
-        <p id="completionStatus">0 / 0 완료</p>
-        <div id="teamCounts" class="team-counts"></div>
+
+      <div class="statusBox">
+        <span>현재 상태</span>
+        <strong id="gameStatus">-</strong>
       </div>
-    </section>
 
-    <section class="panel">
-      <h2>참가자 명단</h2>
-      <div id="playersTable" class="players-table"></div>
-    </section>
+      <h3>참가 현황</h3>
+      <div id="teamStatus" class="teamStatus"></div>
 
-    <section class="panel">
-      <h2>왕중왕전 진출자</h2>
-      <div id="adminResults" class="result-list"></div>
+      <h3>결과 미리보기</h3>
+      <div id="adminResults" class="resultList"></div>
     </section>
   </main>
-  <script type="module" src="admin.js"></script>
+  <script type="module" src="./admin.js"></script>
 </body>
 </html>

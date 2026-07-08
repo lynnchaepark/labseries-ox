@@ -1,62 +1,68 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lab Series OX Championship</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <main class="app-shell">
+  <main class="wrap">
     <section class="card" id="joinScreen">
-      <div class="eyebrow">Lab Series Men's Skin Championship</div>
-      <h1>OX 예선전 입장</h1>
-      <label>조 선택</label>
-      <select id="teamSelect">
+      <p class="eyebrow">LAB SERIES</p>
+      <h1>OX Championship</h1>
+      <p class="sub">참여할 조를 선택해주세요.</p>
+      <label class="label" for="teamSelect">조 선택</label>
+      <select id="teamSelect" class="input">
         <option value="">조를 선택하세요</option>
-        <option value="1조">1조</option>
-        <option value="2조">2조</option>
-        <option value="3조">3조</option>
-        <option value="4조">4조</option>
+        <option value="1">1조</option>
+        <option value="2">2조</option>
+        <option value="3">3조</option>
+        <option value="4">4조</option>
       </select>
-      <label>이름</label>
-      <input id="nameInput" placeholder="예) 홍길동" autocomplete="name" />
-      <button id="joinBtn">입장하기</button>
-      <p class="hint">진행자가 시작 버튼을 누르면 퀴즈가 시작됩니다.</p>
+      <button id="joinBtn" class="btn primary">입장하기</button>
+      <p id="joinMsg" class="msg"></p>
     </section>
 
-    <section class="card hidden" id="waitingScreen">
+    <section class="card hidden" id="waitScreen">
+      <p class="eyebrow">대기 중</p>
+      <h2><span id="waitTeam"></span> 입장 완료</h2>
+      <p class="sub">진행자가 시작 버튼을 누르면 퀴즈가 시작됩니다.</p>
       <div class="loader"></div>
-      <h1>대기 중</h1>
-      <p id="playerInfo"></p>
-      <p class="hint">진행자가 시작하면 각자 1번 문제부터 시작합니다.</p>
     </section>
 
-    <section class="card hidden quiz-card" id="quizScreen">
-      <div class="top-row">
-        <span id="questionCount">Q1 / 8</span>
-        <span id="timeText">15초</span>
+    <section class="card hidden" id="quizScreen">
+      <div class="toprow">
+        <span id="teamBadge" class="badge"></span>
+        <span id="qCount" class="badge ghost"></span>
       </div>
       <div class="progress"><div id="progressBar"></div></div>
-      <h2 id="questionText"></h2>
-      <div class="ox-grid">
-        <button class="o-btn" data-answer="O">O</button>
-        <button class="x-btn" data-answer="X">X</button>
+      <h2 id="questionText" class="question"></h2>
+      <div class="oxgrid">
+        <button class="oxbtn" data-answer="O">O</button>
+        <button class="oxbtn" data-answer="X">X</button>
       </div>
-      <p class="hint" id="answerStatus">정답을 선택하세요.</p>
+      <button id="nextBtn" class="btn primary" disabled>다음 문제로 넘어가기</button>
+      <p class="tiny">선택 후 다음 버튼을 눌러주세요. 빠르게 완료할수록 동점 시 유리합니다.</p>
     </section>
 
     <section class="card hidden" id="doneScreen">
-      <h1>제출 완료!</h1>
-      <p>수고하셨습니다.</p>
-      <p class="hint">결과 공개를 기다려주세요.</p>
+      <p class="eyebrow">제출 완료</p>
+      <h2>수고하셨습니다!</h2>
+      <p class="sub">결과 공개를 기다려주세요.</p>
+      <div class="scorebox">
+        <span>내 조 점수</span>
+        <strong id="myScore">0점</strong>
+      </div>
     </section>
 
     <section class="card hidden" id="resultScreen">
-      <h1>왕중왕전 진출자</h1>
-      <div id="resultList" class="result-list"></div>
+      <p class="eyebrow">RESULT</p>
+      <h2>최종 순위</h2>
+      <div id="resultList" class="resultList"></div>
+      <p class="tiny">동점일 경우, 총 답변 제출 소요시간이 짧은 팀이 상위 순위입니다.</p>
     </section>
   </main>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
