@@ -5,6 +5,7 @@ const GAME_REF = doc(db, 'game', 'current');
 const TEAMS_COL = collection(db, 'teams');
 
 const $ = (id) => document.getElementById(id);
+const VALID_TEAM_IDS = ['1','2','3','4'];
 
 function getTeamLabel(teamId){
   const idx = Number(teamId) - 1;
@@ -19,7 +20,7 @@ function formatMs(ms){
 }
 function rankTeams(teamDocs){
   return teamDocs
-    .filter(t => t.completed)
+    .filter(t => t.completed && VALID_TEAM_IDS.includes(String(t.teamId)))
     .sort((a,b) => (b.score - a.score) || ((a.elapsedMs ?? 999999999) - (b.elapsedMs ?? 999999999)) || Number(a.teamId)-Number(b.teamId));
 }
 function renderTeamStatus(teamDocs){
@@ -69,7 +70,8 @@ onSnapshot(GAME_REF, (snap) => {
 });
 
 onSnapshot(TEAMS_COL, (snap) => {
-  const teams = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  const teams = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+    .filter(t => VALID_TEAM_IDS.includes(String(t.teamId)));
   renderTeamStatus(teams);
   renderResults(teams);
 });

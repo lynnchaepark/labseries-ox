@@ -4,7 +4,13 @@ import { QUESTIONS, TEAM_LABELS } from './questions.js';
 const GAME_REF = doc(db, 'game', 'current');
 const TEAMS_COL = collection(db, 'teams');
 
-let myTeam = localStorage.getItem('labseries_team') || '';
+const VALID_TEAM_IDS = ['1','2','3','4'];
+function sanitizeTeamId(value){
+  const v = String(value || '');
+  return VALID_TEAM_IDS.includes(v) ? v : '';
+}
+let myTeam = sanitizeTeamId(localStorage.getItem('labseries_team'));
+if(!myTeam) localStorage.removeItem('labseries_team');
 let answers = [];
 let currentIndex = 0;
 let currentAnswer = null;
@@ -29,7 +35,7 @@ function formatMs(ms){
 }
 function rankTeams(teamDocs){
   return teamDocs
-    .filter(t => t.completed)
+    .filter(t => t.completed && VALID_TEAM_IDS.includes(String(t.teamId)))
     .sort((a,b) => (Number(b.score || 0) - Number(a.score || 0)) || ((a.elapsedMs ?? 999999999) - (b.elapsedMs ?? 999999999)) || Number(a.teamId)-Number(b.teamId));
 }
 function renderResults(teamDocs){
@@ -48,7 +54,8 @@ function renderResults(teamDocs){
 }
 async function fetchAllTeams(){
   const snap = await getDocs(TEAMS_COL);
-  return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  return snap.docs.map(d => ({ id:d.id, ...d.data() }))
+    .filter(t => VALID_TEAM_IDS.includes(String(t.teamId)));
 }
 function scoreQuestion(q, answer){
   if(q.type === 'ox') return answer === q.answer ? (q.points ?? 1) : 0;
@@ -84,7 +91,7 @@ function isAnswered(q){
 function updateNext(){ $('nextBtn').disabled = !isAnswered(QUESTIONS[currentIndex]); }
 
 $('joinBtn').addEventListener('click', async () => {
-  const teamId = $('teamSelect').value;
+  const teamId = sanitizeTeamId($('teamSelect').value);
   $('joinMsg').textContent = '';
   if(!teamId){ $('joinMsg').textContent = '조를 선택해주세요.'; return; }
 
@@ -132,19 +139,38 @@ function listenMyTeam(){
 onSnapshot(GAME_REF, async (snap) => {
   const state = snap.exists() ? snap.data() : { status:'waiting' };
   if(state.status === 'waiting'){
-    if(myTeam){ $('waitTeam').textContent = getTeamLabel(myTeam); show('waitScreen'); }
-    else show('joinScreen');
+    if(myTeam){
+      const tSnap = await getDoc(doc(db,'teams',myTeam));
+      if(tSnap.exists() && tSnap.data()?.joined){
+        $('waitTeam').textContent = getTeamLabel(myTeam);
+        show('waitScreen');
+      } else {
+        localStorage.removeItem('labseries_team');
+        myTeam = '';
+        show('joinScreen');
+      }
+    } else {
+      show('joinScreen');
+    }
   }
   if(state.status === 'running'){
-    if(!myTeam) return;
+    myTeam = sanitizeTeamId(myTeam);
+    if(!myTeam){
+      localStorage.removeItem('labseries_team');
+      show('joinScreen');
+      return;
+    }
     const tSnap = await getDoc(doc(db,'teams',myTeam));
     if(tSnap.exists() && tSnap.data().completed){ show('doneScreen'); return; }
     startQuiz(state.startAtMs || Date.now());
   }
   if(state.status === 'finished'){
+    myTeam = sanitizeTeamId(myTeam);
     if(myTeam) show('doneScreen');
+    else show('joinScreen');
   }
   if(state.status === 'revealed'){
+    myTeam = sanitizeTeamId(myTeam);
     const teams = await fetchAllTeams();
     renderResults(teams);
     show('resultScreen');
