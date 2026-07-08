@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lab Series OX Championship</title>
+  <title>Lab Series Quiz Championship</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="wrap">
     <section class="card" id="joinScreen">
       <p class="eyebrow">LAB SERIES</p>
-      <h1>OX Championship</h1>
+      <h1>Quiz Championship</h1>
       <p class="sub">참여할 조를 선택해주세요.</p>
       <label class="label" for="teamSelect">조 선택</label>
       <select id="teamSelect" class="input">
@@ -38,12 +38,9 @@
       </div>
       <div class="progress"><div id="progressBar"></div></div>
       <h2 id="questionText" class="question"></h2>
-      <div class="oxgrid">
-        <button class="oxbtn" data-answer="O">O</button>
-        <button class="oxbtn" data-answer="X">X</button>
-      </div>
+      <div id="answerArea" class="answerArea"></div>
       <button id="nextBtn" class="btn primary" disabled>다음 문제로 넘어가기</button>
-      <p class="tiny">선택 후 다음 버튼을 눌러주세요. 빠르게 완료할수록 동점 시 유리합니다.</p>
+      <p class="tiny">정답을 선택/입력한 뒤 다음 버튼을 눌러주세요. 동점일 경우 제출 소요시간이 짧은 팀이 우승합니다.</p>
     </section>
 
     <section class="card hidden" id="doneScreen">

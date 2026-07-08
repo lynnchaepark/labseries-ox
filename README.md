@@ -1,26 +1,49 @@
-# Lab Series OX Championship - Team Version
+# Lab Series Quiz Championship V4
 
 ## 접속 주소
-- 참가자: https://labseries-ox.vercel.app
-- 진행자: https://labseries-ox.vercel.app/admin.html
+- 참가자: `https://labseries-ox.vercel.app`
+- 진행자: `https://labseries-ox.vercel.app/admin.html`
 
-## 변경된 방식
-- 개인전이 아니라 팀당 1명만 접속합니다.
-- 참가자는 이름 없이 조만 선택합니다. (1조~4조)
-- 진행자가 START를 눌러야 시작됩니다.
-- 각 팀은 O/X 답변을 선택하고 `다음 문제로 넘어가기`를 눌러 다음 문제로 이동합니다.
-- 최종 순위는 점수 높은 순으로 결정됩니다.
-- 동점이면 전체 제출 소요시간이 짧은 팀이 승리합니다.
-- 진행자가 `결과 공개` 버튼을 눌러야 참가자 화면에 결과가 표시됩니다.
+## 이번 버전 변경사항
+- 이름 입력 제거: 조 드롭다운만 선택
+- 개인전이 아닌 팀 대표 1명씩 참여
+- OX / 단답형 / 빈칸형 / 다중선택형 지원
+- 답변 후 `다음 문제로 넘어가기` 버튼으로 진행
+- 최종 결과는 1등~4등, 점수, 제출 소요시간 표시
+- 동점 시 제출 소요시간이 짧은 팀이 상위 순위
 
-## OX 문제 수정 방법
-`questions.js` 파일에서 QUESTIONS 배열의 text와 answer만 수정하면 됩니다.
+## 문제 수정 위치
+`questions.js` 파일에서 문제와 정답을 수정합니다.
 
+### OX 예시
 ```js
 {
-  text: "문제 내용",
-  answer: "O"
+  type: "ox",
+  text: "문제 문장",
+  answer: "O",
+  points: 1
 }
 ```
 
-정답은 반드시 `O` 또는 `X`로 입력하세요.
+### 단답형 예시
+```js
+{
+  type: "short",
+  text: "문제 문장",
+  answers: ["콜라겐", "collagen"],
+  points: 1
+}
+```
+
+### 다중선택형 예시
+```js
+{
+  type: "multi",
+  text: "모두 선택해주세요.",
+  options: [
+    { label: "정답 보기", correct: true },
+    { label: "오답 보기", correct: false }
+  ],
+  points: 1
+}
+```
