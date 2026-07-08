@@ -16,6 +16,10 @@ const screens = ['joinScreen','waitScreen','quizScreen','doneScreen','resultScre
 function show(id){ screens.forEach(s => $(s).classList.toggle('hidden', s!==id)); }
 function normalize(v){ return String(v ?? '').trim().replace(/\s+/g,'').toLowerCase(); }
 function formatScore(n){ return Number.isInteger(n) ? `${n}점` : `${n.toFixed(1)}점`; }
+function getTeamLabel(teamId){
+  const idx = Number(teamId) - 1;
+  return TEAM_LABELS[idx] || `${teamId}조`;
+}
 function formatMs(ms){
   if(!ms && ms !== 0) return '-';
   const total = Math.max(0, Math.round(ms/1000));
@@ -35,7 +39,7 @@ function renderResults(teamDocs){
     <div class="resultItem ${i===0?'first':''}">
       <div class="rank">${i+1}등</div>
       <div>
-        <div class="teamName">${TEAM_LABELS[Number(t.teamId)-1]}</div>
+        <div class="teamName">${getTeamLabel(t.teamId)}</div>
         <div class="meta">제출 소요시간 ${formatMs(t.elapsedMs)}</div>
       </div>
       <div class="score">${formatScore(Number(t.score || 0))}</div>
@@ -108,8 +112,8 @@ $('joinBtn').addEventListener('click', async () => {
     joinedAt: serverTimestamp()
   }, { merge: true });
 
-  $('waitTeam').textContent = TEAM_LABELS[Number(teamId)-1];
-  $('teamBadge').textContent = TEAM_LABELS[Number(teamId)-1];
+  $('waitTeam').textContent = getTeamLabel(teamId);
+  $('teamBadge').textContent = getTeamLabel(teamId);
   show('waitScreen');
   listenMyTeam();
 });
@@ -128,7 +132,7 @@ function listenMyTeam(){
 onSnapshot(GAME_REF, async (snap) => {
   const state = snap.exists() ? snap.data() : { status:'waiting' };
   if(state.status === 'waiting'){
-    if(myTeam){ $('waitTeam').textContent = TEAM_LABELS[Number(myTeam)-1]; show('waitScreen'); }
+    if(myTeam){ $('waitTeam').textContent = getTeamLabel(myTeam); show('waitScreen'); }
     else show('joinScreen');
   }
   if(state.status === 'running'){

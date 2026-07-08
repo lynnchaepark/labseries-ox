@@ -6,6 +6,10 @@ const TEAMS_COL = collection(db, 'teams');
 
 const $ = (id) => document.getElementById(id);
 
+function getTeamLabel(teamId){
+  const idx = Number(teamId) - 1;
+  return TEAM_LABELS[idx] || `${teamId}조`;
+}
 function formatMs(ms){
   if(!ms && ms !== 0) return '-';
   const sec = Math.max(0, Math.round(ms/1000));
@@ -26,7 +30,7 @@ function renderTeamStatus(teamDocs){
     const completed = !!t?.completed;
     return `
       <div class="teamCard ${completed ? 'done' : ''}">
-        <h4>${TEAM_LABELS[n-1]}</h4>
+        <h4>${getTeamLabel(n)}</h4>
         <p>${joined ? '입장 완료' : '미입장'}</p>
         <p>${completed ? `제출 완료 · ${t.score}점 · ${formatMs(t.elapsedMs)}` : '진행 전/진행 중'}</p>
       </div>
@@ -40,7 +44,7 @@ function renderResults(teamDocs){
     <div class="resultItem ${i===0?'first':''}">
       <div class="rank">${i+1}등</div>
       <div>
-        <div class="teamName">${TEAM_LABELS[Number(t.teamId)-1]}</div>
+        <div class="teamName">${getTeamLabel(t.teamId)}</div>
         <div class="meta">제출 소요시간 ${formatMs(t.elapsedMs)}</div>
       </div>
       <div class="score">${t.score}점</div>
